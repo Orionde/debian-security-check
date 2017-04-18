@@ -183,7 +183,15 @@ def set_missing(DXA_array):
 				print "NO CVE"
 
 			# Get packages
-			html_doc = request_url("https://tracker.debian.org/pkg/" + dxa.soft)
+			html_doc = ""
+			if dxa.soft == "typo3-sec":
+				html_doc = request_url("https://tracker.debian.org/pkg/typo3-src")
+			elif dxa.soft == "phpymadmin":
+				html_doc = request_url("https://tracker.debian.org/pkg/phpmyadmin")
+			else:
+				html_doc = request_url("https://tracker.debian.org/pkg/" + dxa.soft)
+
+			print "Trying URL " + "https://tracker.debian.org/pkg/" + dxa.soft
 			soup = BeautifulSoup(html_doc, "html.parser")
 			pack = soup.find_all("ul")[3].select('a')
 
