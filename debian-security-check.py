@@ -123,7 +123,8 @@ def create_DLA():
 			try:
 				DLA_date = re.search(r'^\[.*([0-8]{4})\]', line).group(1)
 				DLA_name = re.search('DLA-[0-9]*-[0-9]*', line).group(0)
-				DLA_soft =  re.match(r'\[.*\] DLA-[0-9\-]* (.*) -.*', line).group(1)
+				DLA_soft = re.match(r'\[.*\] DLA-[0-9\-]* (.*) -.*', line).group(1)
+				DLA_soft = DLA_soft.replace(" ", "")
 				DLA_syno = re.search(" - (.*)$", line).group(1)
 
 				nex = next(DLA_file) # Look next line of file for corresponding CVE
@@ -145,6 +146,8 @@ def create_DSA():
 				DSA_date = re.search(r'^\[.*([0-8]{4})\]', line).group(1)
 				DSA_name = re.search('DSA-[0-9]*-[0-9]*', line).group(0)
 				DSA_soft =  re.match(r'\[.*\] DSA-[0-9\-]* (.*) -.*', line).group(1)
+				DSA_soft.replace(" ", "")
+				DLA_syno = re.search(" - (.*)$", line).group(1)
 				DSA_syno = re.search(" - (.*)$", line).group(1)
 
 				nex = next(DSA_file) # Look next line of file for corresponding CVE
@@ -152,7 +155,7 @@ def create_DSA():
 				DSA_synopsys = DSA_soft + " -- " + DSA_syno
 
 				## Add new object to DLA array
-				DXA_array.append(DXA('DSA', DSA_name, DSA_soft, DSA_date, CVE_names, DSA_synopsys))
+				DSA_array.append(DXA('DSA', DSA_name, DSA_soft, DSA_date, CVE_names, DSA_synopsys))
 			except AttributeError: # Regex will not always match
 				pass
 	return DSA_array
@@ -161,6 +164,8 @@ def create_DSA():
 def set_missing(DXA_array):
 	for dxa in DXA_array:
 		print '------------------------------------------------'
+		print dxa.typ
+		print dxa.CVE
 		try:
 			description = ""
 			packages = list()
@@ -179,30 +184,51 @@ def set_missing(DXA_array):
 								
 				dxa.set_description(description)
 				dxa.set_versions(versions)
+				# Get packages
+				html_doc = ""
+				url = ""
+				if " " in dxa.soft:
+					print "Old package !"
+				else:
+					if dxa.soft == "typo3-sec":
+						url = "https://tracker.debian.org/pkg/typo3-src"
+					elif dxa.soft == "phpymadmin":
+						url = "https://tracker.debian.org/pkg/phpmyadmin"
+					elif "kernel" in dxa.soft:
+						raise IndexError
+					elif dxa.soft == "xine":
+						raise IndexError
+					elif dxa.soft == "kpdf":
+						raise IndexError
+					elif dxa.soft == "up-imap":
+						raise IndexError
+					elif dxa.soft == "libtiff":
+						raise IndexError
+					elif dxa.soft == "libgd1":
+						raise IndexError
+					elif dxa.soft == "qt":
+						raise IndexError
+						
+					else:
+						so = "".join(dxa.soft.split())
+						url = "https://tracker.debian.org/pkg/" + so
+					html_doc = request_url(url)
+					print "Trying URL " + url
+					soup = BeautifulSoup(html_doc, "html.parser")
+					pack = soup.find_all("ul")[3].select('a')
+
+					for ul in pack:
+						packages.append(ul.get_text())
+
+					dxa.set_packages(packages)
 			else:
 				print "NO CVE"
 
-			# Get packages
-			html_doc = ""
-			if dxa.soft == "typo3-sec":
-				html_doc = request_url("https://tracker.debian.org/pkg/typo3-src")
-			elif dxa.soft == "phpymadmin":
-				html_doc = request_url("https://tracker.debian.org/pkg/phpmyadmin")
-			else:
-				html_doc = request_url("https://tracker.debian.org/pkg/" + dxa.soft)
-
-			print "Trying URL " + "https://tracker.debian.org/pkg/" + dxa.soft
-			soup = BeautifulSoup(html_doc, "html.parser")
-			pack = soup.find_all("ul")[3].select('a')
-
-			for ul in pack:
-				packages.append(ul.get_text())
-
-			dxa.set_packages(packages)
 		except KeyError:
 			print "KEYERROR : ", dxa.soft, dxa.name, dxa.CVE
 		except IndexError:
 			print "INDEXERROR : ", dxa.soft
+			print "Old package !"
 
 def create_xml_file(DXA_array):
 	with open('XML', 'a') as xml_file:
@@ -230,8 +256,8 @@ Main program
 """
 if __name__ == "__main__":
 	os.system("svn update secure-testing")	
-	DXA_array = create_DLA()
-	DXA_array.extend(create_DSA())
+	DXA_array = create_DSA()
+	DXA_array.extend(create_DLA())
 	CVE_objects = generate_CVE()
 	set_missing(DXA_array)
 	create_xml_file(DXA_array)
