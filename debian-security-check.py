@@ -232,7 +232,7 @@ def set_missing(DXA_array):
 
 def create_xml_file(DXA_array):
 	with open('XML', 'a') as xml_file:
-		xml_file.write('<?xml version="1.0" encoding="ASCII"?>\n')
+		xml_file.write('<?xml version="1.0"?>\n')
 		xml_file.write('<opt>\n')
 		for dla in DXA_array:
 			to_write = '  <' + dla.name + ' description=' + quoteattr(dla.description) \
