@@ -7,7 +7,8 @@ import urllib2
 import os
 
 from bs4 import BeautifulSoup
-from xml.sax.saxutils import quoteattr # Escape " and ' in XML
+from xml.sax.saxutils import quoteattr  # Escape " and ' in XML
+
 
 class CVE:
 	def __init__(self, name):
@@ -57,11 +58,12 @@ def request_url(url):
 		exit(5)
 	return request_handle.read()
 
+
 def get_versions_from_cve(html_soup):
 	versions = list()
 	description = html_soup.find_all("table")[0].select('td')
-	table  = html_soup.find_all("table")[1] # get second table
-	source = (((table.select('tr')[1]).select('td')[0]).getText()).replace(" (PTS)","")
+	table = html_soup.find_all("table")[1]  # get second table
+	source = (((table.select('tr')[1]).select('td')[0]).getText()).replace(" (PTS)", "")
 
 	for row in table:
 		columns = row.select('td')
@@ -73,7 +75,8 @@ def get_versions_from_cve(html_soup):
 			versions.append(parsed_array[2])
 	return versions
 
-def	get_description_from_cve(html_soup):
+
+def get_description_from_cve(html_soup):
 	des = html_soup.find_all("tr")[1].get_text()
 	des = re.sub(r'Description', '', des)
 	if des:
@@ -81,11 +84,12 @@ def	get_description_from_cve(html_soup):
 	else:
 		print "NULL"
 
+
 def generate_CVE():
 	CVE_array = list()
 	CVE_objects = list()
 
-	#Transform file in array
+	# Transform file in array
 	with open("secure-testing/data/CVE/list", "r") as CVE_file:
 		for cve in CVE_file:
 			CVE_array.append(cve)
@@ -102,7 +106,7 @@ def generate_CVE():
 			except AttributeError:
 				pass
 			if cve and cve.note:
-				cve.note = cve.note.rstrip(' ') # remove training ' '
+				cve.note = cve.note.rstrip(' ')  # remove training ' '
 				CVE_objects.append(cve)
 			elif cve:
 				cve.add_note("Not Available")
@@ -116,6 +120,7 @@ def generate_CVE():
 
 	return CVE_objects
 	
+
 def create_DLA():
 	DLA_array = list()
 	with open("secure-testing/data/DLA/list", "r") as DLA_file:
@@ -127,13 +132,13 @@ def create_DLA():
 				DLA_soft = DLA_soft.replace(" ", "")
 				DLA_syno = re.search(" - (.*)$", line).group(1)
 
-				nex = next(DLA_file) # Look next line of file for corresponding CVE
+				nex = next(DLA_file)  # Look next line of file for corresponding CVE
 				CVE_names = re.findall(r'CVE-[0-9]*-[0-9]*', nex)
 				DLA_synopsys = DLA_soft + " -- " + DLA_syno
 
-				## Add new object to DLA array
+				# Add new object to DLA array
 				DLA_array.append(DXA('DLA', DLA_name, DLA_soft, DLA_date, CVE_names, DLA_synopsys))
-			except AttributeError: # Regex will not always match
+			except AttributeError:  # Regex will not always match
 				pass
 	return DLA_array
 	
@@ -145,18 +150,18 @@ def create_DSA():
 			try:
 				DSA_date = re.search(r'^\[.*([0-8]{4})\]', line).group(1)
 				DSA_name = re.search('DSA-[0-9]*-[0-9]*', line).group(0)
-				DSA_soft =  re.match(r'\[.*\] DSA-[0-9\-]* (.*) -.*', line).group(1)
+				DSA_soft = re.match(r'\[.*\] DSA-[0-9\-]* (.*) -.*', line).group(1)
 				DSA_soft.replace(" ", "")
 				DLA_syno = re.search(" - (.*)$", line).group(1)
 				DSA_syno = re.search(" - (.*)$", line).group(1)
 
-				nex = next(DSA_file) # Look next line of file for corresponding CVE
+				nex = next(DSA_file)  # Look next line of file for corresponding CVE
 				CVE_names = re.findall(r'CVE-[0-9]*-[0-9]*', nex)
 				DSA_synopsys = DSA_soft + " -- " + DSA_syno
 
-				## Add new object to DLA array
+				# Add new object to DLA array
 				DSA_array.append(DXA('DSA', DSA_name, DSA_soft, DSA_date, CVE_names, DSA_synopsys))
-			except AttributeError: # Regex will not always match
+			except AttributeError:  # Regex will not always match
 				pass
 	return DSA_array
 
@@ -230,6 +235,7 @@ def set_missing(DXA_array):
 			print "INDEXERROR : ", dxa.soft
 			print "Old package !"
 
+
 def create_xml_file(DXA_array):
 	with open('XML', 'a') as xml_file:
 		xml_file.write('<?xml version="1.0"?>\n')
@@ -238,7 +244,7 @@ def create_xml_file(DXA_array):
 			to_write = '  <' + dla.name + ' description=' + quoteattr(dla.description) \
 				+ ' from="Debian CVS english security report" multirelease="1" notes="' + dla.notes + '" product="Debian Linux" references="' \
 				+ dla.link + '" release="1" solution="Not available" synopsis="' + dla.synopsys \
-				+'" topic="' + dla.synopsys + '" type="Security Advisory" security_name="' + dla.name +'">\n'
+				+ '" topic="' + dla.synopsys + '" type="Security Advisory" security_name="' + dla.name + '">\n'
 			xml_file.write(to_write)
 			for pack in dla.packages:
 				for version in dla.versions:
@@ -248,7 +254,6 @@ def create_xml_file(DXA_array):
 			to_write = '  </' + dla.name + '>\n'	
 			xml_file.write(to_write)
 		xml_file.write('</opt>')
-
 
 	
 """
@@ -261,3 +266,4 @@ if __name__ == "__main__":
 	CVE_objects = generate_CVE()
 	set_missing(DXA_array)
 	create_xml_file(DXA_array)
+
