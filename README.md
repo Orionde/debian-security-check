@@ -1,8 +1,12 @@
 # debian-security-check
+### Utilité
+Génère un fichier XLM ayant pour but d'être interprété par [Spacewalk](http://spacewalk.redhat.com/)
+### Installation
 
-Installation
-
-1) Cloner repo : git clone https://github.com/congiohj/debian-security-check
+1) Cloner repo :
+```bash
+git clone https://github.com/congiohj/debian-security-check
+```
 2) Aller dans le repo :
 ```bash
 cd debian-security-check
@@ -19,3 +23,15 @@ svn co svn://anonscm.debian.org/svn/secure-testing
 apt-get install python-bs4
 ```
 
+5) Lancer le script :
+```bash
+rm XML  # Supprimer l'ancien XML : ouvert en mode append
+python debian-security-check.py
+```
+
+6) Nota :
+> Pas de fichier de log
+
+> Les DSA / DLA d'avant 2008 ne sont pas traitées correctement
+
+> Le programme recommence la lecture des fichier DSA / DLA depuis le début à chaque fois (à revoir, donc)
