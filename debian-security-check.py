@@ -241,10 +241,10 @@ def create_xml_file(DXA_array):
 		xml_file.write('<?xml version="1.0"?>\n')
 		xml_file.write('<opt>\n')
 		for dla in DXA_array:
-			to_write = '  <' + dla.name + ' description=' + quoteattr(dla.description) \
-				+ ' from="Debian CVS english security report" multirelease="1" notes="' + dla.notes + '" product="Debian Linux" references="' \
-				+ dla.link + '" release="1" solution="Not available" synopsis="' + dla.synopsys \
-				+ '" topic="' + dla.synopsys + '" type="Security Advisory" security_name="' + dla.name + '">\n'
+			to_write = '  <' + quoteattr(dla.name) + ' description=' + quoteattr(dla.description) \
+				+ ' from="Debian CVS english security report" multirelease="1" notes="' + quoteattr(dla.notes) + '" product="Debian Linux" references="' \
+				+ quoteattr(dla.link) + '" release="1" solution="Not available" synopsis="' + quoteattr(dla.synopsys) \
+				+ '" topic="' + quoteattr(dla.synopsys) + '" type="Security Advisory" security_name="' + quoteattr(dla.name) + '">\n'
 			xml_file.write(to_write)
 			for pack in dla.packages:
 				for version in dla.versions:
