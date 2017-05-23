@@ -5,46 +5,12 @@ import re
 import json
 import urllib2
 import os
+import time
+import CVE
+import DXA
 
 from bs4 import BeautifulSoup
 from xml.sax.saxutils import quoteattr  # Escape " and ' in XML
-
-
-class CVE:
-	def __init__(self, name):
-		self.name = name
-		self.note = ""
-
-	def add_note(self, note):
-		self.note += note
-
-
-class DXA:
-	def __init__(self, typ, name, soft, year, CVE, synopsys):
-		self.typ = typ
-		self.name = name
-		self.description = ""
-		self.soft = soft
-		self.year = year
-		self.link = "http://www.debian.org/security/" + self.year + "/" + self.name
-		self.CVE = CVE
-		self.synopsys = synopsys
-		self.packages = list()
-		self.versions = list()
-		self.notes = ""
-	
-	def set_description(self, description):
-		self.description = description
-
-	def set_packages(self, packages):
-		self.packages = packages
-
-	def set_versions(self, versions):
-		self.versions = versions
-
-	def set_notes(self, notes):
-		self.notes = notes
-	
 
 def request_url(url):
 	request = urllib2.Request(url)
@@ -56,6 +22,10 @@ def request_url(url):
 	except urllib2.URLError, error:
 		print "URL error on" + " " + url + " " + "reason" + " " + str(error.reason)
 		exit(5)
+	except:
+		print "Connection timed out. Retrying..."
+		time.sleep(120)
+		request_handle = urllib2.urlopen(request)
 	return request_handle.read()
 
 
@@ -112,7 +82,7 @@ def generate_CVE():
 				cve.add_note("Not Available")
 				CVE_objects.append(cve)
 				
-			cve = CVE(current_CVE)
+			cve = CVE.CVE(current_CVE)
 
 		elif "NOTE: " in line:
 			note = regex.search(line).group(1)
@@ -137,7 +107,7 @@ def create_DLA():
 				DLA_synopsys = DLA_soft + " -- " + DLA_syno
 
 				# Add new object to DLA array
-				DLA_array.append(DXA('DLA', DLA_name, DLA_soft, DLA_date, CVE_names, DLA_synopsys))
+				DLA_array.append(DXA.DXA('DLA', DLA_name, DLA_soft, DLA_date, CVE_names, DLA_synopsys))
 			except AttributeError:  # Regex will not always match
 				pass
 	return DLA_array
@@ -160,7 +130,7 @@ def create_DSA():
 				DSA_synopsys = DSA_soft + " -- " + DSA_syno
 
 				# Add new object to DLA array
-				DSA_array.append(DXA('DSA', DSA_name, DSA_soft, DSA_date, CVE_names, DSA_synopsys))
+				DSA_array.append(DXA.DXA('DSA', DSA_name, DSA_soft, DSA_date, CVE_names, DSA_synopsys))
 			except AttributeError:  # Regex will not always match
 				pass
 	return DSA_array
@@ -241,10 +211,10 @@ def create_xml_file(DXA_array):
 		xml_file.write('<?xml version="1.0"?>\n')
 		xml_file.write('<opt>\n')
 		for dla in DXA_array:
-			to_write = '  <' + quoteattr(dla.name) + ' description=' + quoteattr(dla.description) \
-				+ ' from="Debian CVS english security report" multirelease="1" notes="' + quoteattr(dla.notes) + '" product="Debian Linux" references="' \
-				+ quoteattr(dla.link) + '" release="1" solution="Not available" synopsis="' + quoteattr(dla.synopsys) \
-				+ '" topic="' + quoteattr(dla.synopsys) + '" type="Security Advisory" security_name="' + quoteattr(dla.name) + '">\n'
+			to_write = '  <' + dla.name + ' description=' + quoteattr(dla.description) \
+				+ ' from="Debian CVS english security report" multirelease="1" notes=' + quoteattr(dla.notes) + ' product="Debian Linux" references=' \
+				+ quoteattr(dla.link) + ' release="1" solution="Not available" synopsis=' + quoteattr(dla.synopsys) \
+				+ ' topic=' + quoteattr(dla.synopsys) + ' type="Security Advisory" security_name=' + quoteattr(dla.name) + '>\n'
 			xml_file.write(to_write)
 			for pack in dla.packages:
 				for version in dla.versions:
@@ -260,6 +230,7 @@ def create_xml_file(DXA_array):
 Main program
 """
 if __name__ == "__main__":
+	os.system("rm XML")
 	os.system("svn update secure-testing")	
 	DXA_array = create_DSA()
 	DXA_array.extend(create_DLA())
