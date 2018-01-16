@@ -13,7 +13,7 @@ def generate_CVE():
 	CVE_objects = list()
 
 	# Transform file in array
-	with open("secure-testing/data/CVE/list", "r") as CVE_file:
+	with open("security-tracker/data/CVE/list", "r") as CVE_file:
 		for cve in CVE_file:
 			CVE_array.append(cve)
 
