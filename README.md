@@ -34,4 +34,4 @@ python debian-security-check.py
 
 > Les DSA / DLA d'avant 2008 ne sont pas traitées correctement
 
-> Le programme recommence la lecture des fichier DSA / DLA depuis le début à chaque fois (à revoir, donc)
+> Le programme complète le fichier XML s'il est présent ou le crée de 0 s'il ne le trouve pas (Le fichier doit être nommé XML et se trouver à la racine du projet). Ne pas supprimer le fichier XML, sa création entière prend environ 5h
