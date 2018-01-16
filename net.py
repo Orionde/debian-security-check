@@ -1,13 +1,21 @@
 import urllib2
+import time
 
 def request_url(url):
-	request = urllib2.Request(url)
-	try:
-		request_handle = urllib2.urlopen(request)
-	except urllib2.HTTPError, error:
-		print "HTTP error on" + " " + url + " " + "code" + " " + str(error.code)
-		exit(4)
-	except urllib2.URLError, error:
-		print "URL error on" + " " + url + " " + "reason" + " " + str(error.reason)
-		exit(5)
-	return request_handle.read()
+	req = urllib2.Request(url)
+	#import pdb; pdb.set_trace()
+	while True:
+		try:
+			resp = urllib2.urlopen(req)
+		except urllib2.HTTPError as e:
+			if e.code == 404:
+				exit(4)
+			print "HTTP error on" + " " + url + " " + "code" + " " + str(e.code)
+			time.sleep(360)
+		except urllib2.URLError as e:
+			print "URL error on" + " " + url + " " + "reason" + " " + str(e.reason)
+			time.sleep(360)
+		else:
+			print "OK"
+			return resp.read()
+		

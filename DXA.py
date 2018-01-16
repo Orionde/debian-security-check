@@ -32,16 +32,14 @@ class DXA:
 
 def get_versions_from_cve(html_soup):
 	versions = list()
-	description = html_soup.find_all("table")[0].select('td')
 	table = html_soup.find_all("table")[1]  # get second table
-	source = (((table.select('tr')[1]).select('td')[0]).getText()).replace(" (PTS)", "")
 
 	for row in table:
 		columns = row.select('td')
 		parsed_array = []
 		for column in columns:
 			parsed_array.append(column.text)
-		if(len(parsed_array) == 4):
+		if(len(parsed_array) == 4) and parsed_array[3] == 'fixed':
 			versions.append(parsed_array[2])
 	return versions
 
@@ -54,11 +52,10 @@ def get_description_from_cve(html_soup):
 	if not des:
 		des = "Not available"
 	return des
-	
+
 def set_missing(DXA_array, CVE_objects):
 	for dxa in DXA_array:
 		print('------------------------------------------------')
-		print(dxa.typ)
 		print(dxa.CVE)
 		try:
 			description = ""
@@ -67,10 +64,14 @@ def set_missing(DXA_array, CVE_objects):
 			if dxa.CVE:
 				for cve in dxa.CVE:
 					# Get description
+					html_data = ""
 					html_data = net.request_url("https://security-tracker.debian.org/tracker/" + cve)
 					soup = BeautifulSoup(html_data, "html.parser")
 					description += get_description_from_cve(soup)
-					versions.extend(get_versions_from_cve(soup))
+					new_versions = get_versions_from_cve(soup)
+					for v in new_versions:
+						if v not in versions:
+							versions.append(v)
 					for c in CVE_objects:
 						if c.name == cve:
 							dxa.set_notes(c.note)
@@ -118,6 +119,14 @@ def set_missing(DXA_array, CVE_objects):
 			else:
 				print("NO CVE")
 
+			print "versions for", dxa.name
+			for v in versions:
+				print v
+
+			print "packages for", dxa.name
+			for p in dxa.packages:
+				print p
+
 		except KeyError:
 			print("KEYERROR : ", dxa.soft, dxa.name, dxa.CVE)
 		except IndexError:
@@ -125,3 +134,4 @@ def set_missing(DXA_array, CVE_objects):
 			print("Old package !")
 
 	return DXA_array
+
