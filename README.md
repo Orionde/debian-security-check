@@ -2,7 +2,7 @@
 ### Utilité
 Génère un fichier XLM ayant pour but d'être interprété par [Spacewalk](http://spacewalk.redhat.com/)
 
-Le fichier XML est généré d'après les dernières DLA / DSA traitées au run précédent. Si le script n'a jamais  ajouter manuellement dans last_DXA
+Le fichier XML est généré d'après les dernières DLA / DSA traitées au run précédent. Si le scrjamais run, ajouter manuellement dans last_DXA
 
 ### Installation
 
