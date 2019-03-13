@@ -13,9 +13,7 @@ class DXA:
 		self.CVE = CVE
 		self.synopsys = synopsys
 		self.link = self.set_link()
-		self.packages = list()
-		self.versions = list()
-		self.notes = ""
+		self.packages = self.set_packages()
 		self.description, self.versions, self.notes = self.set_infos()
 
 	def set_link(self):
@@ -28,7 +26,8 @@ class DXA:
 		versions = list()
 		if self.CVE:
 			for cve in self.CVE:
-				with urllib.request.urlopen("https://security-tracker.debian.org/tracker/" + cve) as response:
+				url = "https://security-tracker.debian.org/tracker/" + cve
+				with urllib.request.urlopen(url) as response:
 					html_data = response.read()
 					soup = BeautifulSoup(html_data, "html.parser")
 					description += get_description_from_cve(soup)
@@ -43,18 +42,19 @@ class DXA:
 			return "", "", ""
 
 	def set_packages(self):
+		packages = []
 		if " " in self.soft:
 			print("Old package !")
 		else:
-			so = "".join(dxa.soft.split())
+			so = "".join(self.soft.split())
 			url = "https://tracker.debian.org/pkg/" + so
-			html_doc = requests.get(url)
-			print("Trying URL " + url)
-			soup = BeautifulSoup(html_doc, "html.parser")
-			pack = soup.find_all("ul")[3].select('a')
+			with urllib.request.urlopen(url) as response:
+				html_data = response.read()
+				soup = BeautifulSoup(html_data, "html.parser")
+				pack = soup.find_all("ul")[3].select('a')
 
-			for ul in pack:
-				packages.append(ul.get_text())
+				for ul in pack:
+					packages.append(ul.get_text())
 
 			return packages
 
