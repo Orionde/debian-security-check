@@ -60,7 +60,6 @@ use strict;
 use warnings;
 use Getopt::Long;
 use IO::Handle;
-
 # Test for required modules
 &eval_modules;
 import Frontier::Client;
